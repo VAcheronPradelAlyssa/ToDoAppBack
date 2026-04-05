@@ -18,6 +18,8 @@ public class TaskService {
     }
 
     public Task createTask(Task task) {
+        task.setStatuts("TODO");
+        task.setChecked(false);
         return taskRepository.save(task);
     }
 
@@ -25,8 +27,14 @@ public class TaskService {
         return taskRepository.findById(id).map(task -> {
             task.setTitle(taskDetails.getTitle());
             task.setDescription(taskDetails.getDescription());
-            task.setStatuts(taskDetails.getStatuts());
             task.setCreatedAt(taskDetails.getCreatedAt());
+            task.setChecked(taskDetails.isChecked());
+            // Si la tâche est cochée, statut = DONE, sinon TODO
+            if (taskDetails.isChecked()) {
+                task.setStatuts("DONE");
+            } else {
+                task.setStatuts("TODO");
+            }
             return taskRepository.save(task);
         });
     }
