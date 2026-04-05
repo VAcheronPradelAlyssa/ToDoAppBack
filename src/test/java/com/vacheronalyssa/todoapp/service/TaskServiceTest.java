@@ -31,36 +31,55 @@ class TaskServiceTest {
 
     @Test
     void getAllTasks_shouldReturnAllTasks() {
-        Task task1 = new Task(1L, "TODO", "desc1", LocalDateTime.now(), "titre1");
-        Task task2 = new Task(2L, "DONE", "desc2", LocalDateTime.now(), "titre2");
+        Task task1 = new Task(1L, "TODO", false, "desc1", LocalDateTime.now(), "titre1");
+        Task task2 = new Task(2L, "DONE", true, "desc2", LocalDateTime.now(), "titre2");
         when(taskRepository.findAll()).thenReturn(Arrays.asList(task1, task2));
 
         List<Task> result = taskService.getAllTasks();
         assertEquals(2, result.size());
         assertEquals("TODO", result.get(0).getStatuts());
+        assertFalse(result.get(0).isChecked());
+        assertEquals("DONE", result.get(1).getStatuts());
+        assertTrue(result.get(1).isChecked());
     }
 
     @Test
     void createTask_shouldSaveAndReturnTask() {
-        Task task = new Task(null, "TODO", "desc", LocalDateTime.now(), "titre");
-        Task savedTask = new Task(1L, "TODO", "desc", task.getCreatedAt(), "titre");
+        Task task = new Task(null, null, true, "desc", LocalDateTime.now(), "titre");
+        Task savedTask = new Task(1L, "TODO", false, "desc", task.getCreatedAt(), "titre");
         when(taskRepository.save(any(Task.class))).thenReturn(savedTask);
 
         Task result = taskService.createTask(task);
         assertNotNull(result.getId());
         assertEquals("TODO", result.getStatuts());
+        assertFalse(result.isChecked());
     }
 
     @Test
-    void updateTask_shouldUpdateAndReturnTask() {
-        Task existing = new Task(1L, "TODO", "desc", LocalDateTime.now(), "titre");
-        Task update = new Task(null, "DONE", "desc2", LocalDateTime.now(), "titre2");
+    void updateTask_shouldUpdateAndReturnTask_checkedTrue() {
+        Task existing = new Task(1L, "TODO", false, "desc", LocalDateTime.now(), "titre");
+        Task update = new Task(null, null, true, "desc2", LocalDateTime.now(), "titre2");
         when(taskRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(taskRepository.save(any(Task.class))).thenReturn(existing);
 
         Optional<Task> result = taskService.updateTask(1L, update);
         assertTrue(result.isPresent());
         assertEquals("DONE", result.get().getStatuts());
+        assertTrue(result.get().isChecked());
+        assertEquals("desc2", result.get().getDescription());
+    }
+
+    @Test
+    void updateTask_shouldUpdateAndReturnTask_checkedFalse() {
+        Task existing = new Task(1L, "DONE", true, "desc", LocalDateTime.now(), "titre");
+        Task update = new Task(null, null, false, "desc2", LocalDateTime.now(), "titre2");
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(taskRepository.save(any(Task.class))).thenReturn(existing);
+
+        Optional<Task> result = taskService.updateTask(1L, update);
+        assertTrue(result.isPresent());
+        assertEquals("TODO", result.get().getStatuts());
+        assertFalse(result.get().isChecked());
         assertEquals("desc2", result.get().getDescription());
     }
 
